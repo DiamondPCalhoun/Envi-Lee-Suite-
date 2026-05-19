@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { subject, style, mood, platform, extras } = await req.json()
-    if (!subject) return NextResponse.json({ error: 'subject is required' }, { status: 400 })
+    const { productName, details, platform, targetAudience } = await req.json()
+    if (!productName) return NextResponse.json({ error: 'productName is required' }, { status: 400 })
     const key = process.env.ANTHROPIC_API_KEY
     if (!key) return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -11,23 +11,23 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514', max_tokens: 1024,
-        messages: [{ role: 'user', content: `You are an expert AI image and video prompt engineer for fashion and POD photography.
-Subject: ${subject} | Style: ${style || 'editorial fashion photography, luxury aesthetic'}
-Mood: ${mood || 'powerful, confident, aspirational'} | Platform: ${platform || 'Midjourney'} | Extras: ${extras || 'none'}
+        messages: [{ role: 'user', content: `You are a top POD ecommerce copywriter.
+Product: ${productName} | Details: ${details || 'premium stylish fashion item'}
+Platform: ${platform || 'Etsy'} | Audience: ${targetAudience || 'women aged 22-40 who love fashion and luxury'}
 
 Write:
-MAIN PROMPT: Complete ready-to-paste prompt. Subject, wardrobe, setting, lighting, camera, mood.${platform === 'midjourney' ? ' End with --ar 4:5 --style raw --v 6' : ''}
-NEGATIVE PROMPT: Elements to exclude.
-VARIATION 1: Same subject, different angle.
-VARIATION 2: Same subject, different setting.
-TIPS: 2 quick tips for best results on ${platform || 'Midjourney'}.` }]
+TITLE: SEO-optimised for ${platform || 'Etsy'}. Under 140 chars.
+DESCRIPTION: Lifestyle-led, 4-5 sentences, sells the feeling.
+KEY FEATURES: 5 benefit-first bullet points under 15 words each.
+SEO TAGS: 13 comma-separated tags under 20 chars each.
+TIKTOK CAPTION: Hook + product + CTA under 150 chars.` }]
       })
     })
     if (!res.ok) throw new Error(`Anthropic error ${res.status}`)
     const d = await res.json()
     return NextResponse.json({ result: d.content?.[0]?.text ?? '' })
   } catch (err) {
-    console.error('[image-prompt]', err)
+    console.error('[listing]', err)
     return NextResponse.json({ error: 'Generation failed' }, { status: 500 })
   }
 }
